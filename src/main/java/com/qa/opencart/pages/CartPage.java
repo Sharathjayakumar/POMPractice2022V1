@@ -4,6 +4,6 @@ import org.openqa.selenium.By;
 
 public class CartPage {
 
-	By cart = By.id("Cart");
+	By cart = By.id("GitCart");
 	
 }
