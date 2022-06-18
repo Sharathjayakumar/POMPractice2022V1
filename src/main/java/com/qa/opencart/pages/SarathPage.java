@@ -7,13 +7,15 @@ public class SarathPage {
 		
 		
 		int i = 100;
-		
 		System.out.println(i);
 		
 		
 		int pop = 900;
 		
 		System.out.println(pop);
+		int total = 200;
+		System.out.println(total);
+
 
 	}
 
