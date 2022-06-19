@@ -1,67 +1,79 @@
-pipeline {
-
-   agent any
-   stages{
-       
-       stage("Build"){
-           steps{
-               echo("Build Project")
-           }
-       }
-       
-        stage("Run Unit Tests"){
-           steps{
-               echo("Run unit test cases")
-           }
-       }
-       
-        stage("Run SITs"){
-           steps{
-               echo("run interegration test cases")
-           }
-       }
-       
-        stage("Deploy to Dev"){
-           steps{
-               echo("Deploy to Dev")
-           }
-       }
-       
-        stage("Deploy to QA"){
-           steps{
-               echo("Deploy to QA")
-           }
-       }
-       
-        stage("Run test on QA"){
-           steps{
-               echo("Run sanity test automation on QA")
-           }
-       }
-       
-         stage("Deploy to Stage"){
-           steps{
-               echo("Deploy to Stage")
-           }
-       }
-       
-        stage("Run test on Stage"){
-           steps{
-               echo("Run sanity test automation on Stage")
-           }
-       }
-       
-         stage("Deploy to PROD"){
-           steps{
-               echo("Deploy to PROD")
-           }
-       }
-       
-        stage("Run test on PROD"){
-           steps{
-               echo("Run sanity test automation on PROD")
-           }
-       }
-   }
+pipeline 
+{
+    agent any
     
+    tools{
+    	maven 'M3'
+        }
+
+    stages 
+    {
+        stage('Build') 
+        {
+            steps
+            {
+                 git 'https://github.com/jglick/simple-maven-project-with-tests.git'
+                 sh "mvn -Dmaven.test.failure.ignore=true clean package"
+            }
+            post 
+            {
+                success
+                {
+                    junit '**/target/surefire-reports/TEST-*.xml'
+                    archiveArtifacts 'target/*.jar'
+                }
+            }
+        }
+        
+        
+        stage("Deploy to QA"){
+            steps{
+                echo("deploy to qa")
+            }
+        }
+                
+        stage('Regression Automation Test') {
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    git 'https://github.com/Sharathjayakumar/POMPractice2022V1'
+                    sh "mvn clean install"
+                    
+                }
+            }
+        }
+                
+     
+        stage('Publish Allure Reports') {
+           steps {
+                script {
+                    allure([
+                        includeProperties: false,
+                        jdk: '',
+                        properties: [],
+                        reportBuildPolicy: 'ALWAYS',
+                        results: [[path: '/allure-results']]
+                    ])
+                }
+            }
+        }
+        
+        
+        stage('Publish Extent Report'){
+            steps{
+                     publishHTML([allowMissing: false,
+                                  alwaysLinkToLastBuild: false, 
+                                  keepAll: false, 
+                                  reportDir: 'build', 
+                                  reportFiles: 'TestExecutionReport.html', 
+                                  reportName: 'HTML Extent Report', 
+                                  reportTitles: ''])
+            }
+        }
+        
+        stage("Deploy to PROD"){
+            steps{
+                echo("deploy to PROD")
+            }
+        }
+    }
 }
